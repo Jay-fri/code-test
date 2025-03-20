@@ -1,10 +1,15 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { UploadPage } from './pages/UploadPage';
-import { RecipientsPage } from './pages/RecipientsPage';
-import { EditorPage } from './pages/EditorPage';
-import { SummaryPage } from './pages/SummaryPage';
-import { SigningPage } from './pages/SigningPage';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { UploadPage } from "./pages/UploadPage";
+import { RecipientsPage } from "./pages/RecipientsPage";
+import { EditorPage } from "./pages/EditorPage";
+import { SummaryPage } from "./pages/SummaryPage";
+import { SigningPage } from "./pages/SigningPage";
 
 function App() {
   return (

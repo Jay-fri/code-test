@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash } from "lucide-react";
 import { Node } from "reactflow";
-import { useFlowStore } from "../store/flowStore";
+import { useFlowContext } from "../context/FlowContext";
 
 interface ConfigPanelProps {
   node: Node | null;
@@ -17,7 +17,7 @@ interface Field {
 
 const getDefaultDataForType = (type: string) => {
   const baseData = {
-    label: type.charAt(0).toUpperCase() + type.slice(1).replace("-", " ")
+    label: type.charAt(0).toUpperCase() + type.slice(1).replace("-", " "),
   };
 
   switch (type) {
@@ -26,40 +26,40 @@ const getDefaultDataForType = (type: string) => {
         ...baseData,
         name: "",
         type: "string",
-        defaultValue: ""
+        defaultValue: "",
       };
-    
+
     case "url":
       return {
         ...baseData,
         method: "GET",
         path: "",
         fields: [],
-        queryFields: []
+        queryFields: [],
       };
-    
+
     case "auth":
       return {
         ...baseData,
         authType: "bearer",
-        tokenVar: ""
+        tokenVar: "",
       };
-    
+
     case "output":
       return {
         ...baseData,
         outputType: "definition",
         statusCode: 200,
         fields: [],
-        responseRaw: ""
+        responseRaw: "",
       };
-    
+
     case "logic":
       return {
         ...baseData,
-        code: ""
+        code: "",
       };
-    
+
     case "db-find":
     case "db-query":
       return {
@@ -67,17 +67,17 @@ const getDefaultDataForType = (type: string) => {
         model: "",
         operation: "findMany",
         query: "",
-        resultVar: "result"
+        resultVar: "result",
       };
-    
+
     case "db-insert":
       return {
         ...baseData,
         model: "",
         variables: "",
-        resultVar: "result"
+        resultVar: "result",
       };
-    
+
     case "db-update":
     case "db-delete":
       return {
@@ -85,16 +85,16 @@ const getDefaultDataForType = (type: string) => {
         model: "",
         idField: "id",
         variables: "",
-        resultVar: "result"
+        resultVar: "result",
       };
-    
+
     default:
       return baseData;
   }
 };
 
 export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
-  const { models, updateNode } = useFlowStore();
+  const { models, updateNode } = useFlowContext();
   const [newField, setNewField] = useState<Field>({ name: "", type: "string" });
   const [newQueryField, setNewQueryField] = useState<Field>({
     name: "",
@@ -107,9 +107,9 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
       const defaultData = getDefaultDataForType(node.type);
       const newData = {
         ...defaultData,
-        ...node.data // This will override defaults with any existing data
+        ...node.data, // This will override defaults with any existing data
       };
-      
+
       // Only update if the data is different
       if (JSON.stringify(newData) !== JSON.stringify(node.data)) {
         onUpdateNode(node.id, newData);
@@ -123,13 +123,20 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
   }, [node]);
 
   if (!node) return null;
-  console.log("what up");
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     if (!node) return;
-    
-    console.log("Handling change for:", e.target.name, "with value:", e.target.value);
+
+    console.log(
+      "Handling change for:",
+      e.target.name,
+      "with value:",
+      e.target.value
+    );
 
     const newData = {
       ...node.data,
@@ -163,7 +170,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
     const fieldToAdd = arrayName === "queryFields" ? newQueryField : newField;
     if (!fieldToAdd.name.trim()) return;
 
-    const array = [...node.data[arrayName], { ...fieldToAdd }];
+    const array = [...(node.data[arrayName] || []), { ...fieldToAdd }];
     const newData = {
       ...node.data,
       [arrayName]: array,
@@ -347,7 +354,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                   <input
                     type="text"
                     value={field.name}
-                    onBlur={(e) =>
+                    onChange={(e) =>
                       handleArrayChange(index, "name", e.target.value, "fields")
                     }
                     className="flex-1 p-2 border rounded text-sm"
@@ -355,7 +362,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                   />
                   <select
                     value={field.type}
-                    onBlur={(e) =>
+                    onChange={(e) =>
                       handleArrayChange(index, "type", e.target.value, "fields")
                     }
                     className="w-20 p-2 border rounded text-sm"
@@ -377,7 +384,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                 <input
                   type="text"
                   value={newField.name}
-                  onBlur={(e) =>
+                  onChange={(e) =>
                     setNewField({ ...newField, name: e.target.value })
                   }
                   className="flex-1 p-2 border rounded text-sm"
@@ -385,7 +392,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                 />
                 <select
                   value={newField.type}
-                  onBlur={(e) =>
+                  onChange={(e) =>
                     setNewField({ ...newField, type: e.target.value })
                   }
                   className="w-20 p-2 border rounded text-sm"
@@ -427,7 +434,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                     <input
                       type="text"
                       value={field.name}
-                      onBlur={(e) =>
+                      onChange={(e) =>
                         handleArrayChange(
                           index,
                           "name",
@@ -440,7 +447,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                     />
                     <select
                       value={field.type}
-                      onBlur={(e) =>
+                      onChange={(e) =>
                         handleArrayChange(
                           index,
                           "type",
@@ -468,7 +475,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                 <input
                   type="text"
                   value={newQueryField.name}
-                  onBlur={(e) =>
+                  onChange={(e) =>
                     setNewQueryField({ ...newQueryField, name: e.target.value })
                   }
                   className="flex-1 p-2 border rounded text-sm"
@@ -476,7 +483,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                 />
                 <select
                   value={newQueryField.type}
-                  onBlur={(e) =>
+                  onChange={(e) =>
                     setNewQueryField({ ...newQueryField, type: e.target.value })
                   }
                   className="w-20 p-2 border rounded text-sm"
@@ -489,15 +496,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                 <button
                   onClick={() => {
                     if (newQueryField.name.trim()) {
-                      const updatedQueryFields = [
-                        ...(node.data.queryFields || []),
-                        { ...newQueryField },
-                      ];
-                      onUpdateNode(node.id, {
-                        ...node.data,
-                        queryFields: updatedQueryFields,
-                      });
-                      setNewQueryField({ name: "", type: "string" });
+                      addField("queryFields");
                     }
                   }}
                   className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -513,7 +512,9 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
         return (
           <>
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Output Type</label>
+              <label className="block text-sm font-medium mb-1">
+                Output Type
+              </label>
               <select
                 name="outputType"
                 value={node.data.outputType}
@@ -527,7 +528,9 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
 
             {node.data.outputType === "mockup" ? (
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Response Raw</label>
+                <label className="block text-sm font-medium mb-1">
+                  Response Raw
+                </label>
                 <textarea
                   name="responseRaw"
                   value={node.data.responseRaw}
@@ -540,39 +543,51 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Fields</label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {(node.data.fields || []).map((field: Field, index: number) => (
-                    <div key={index} className="flex items-center">
-                      <input
-                        type="text"
-                        value={field.name}
-                        onBlur={(e) =>
-                          handleArrayChange(index, "name", e.target.value, "fields")
-                        }
-                        className="flex-1 p-2 border rounded text-sm"
-                        placeholder="Field name"
-                      />
-                      <select
-                        value={field.type}
-                        onBlur={(e) =>
-                          handleArrayChange(index, "type", e.target.value, "fields")
-                        }
-                        className="w-24 p-2 border rounded text-sm"
-                      >
-                        <option value="string">String</option>
-                        <option value="number">Number</option>
-                        <option value="boolean">Boolean</option>
-                        <option value="date">Date</option>
-                        <option value="object">Object</option>
-                        <option value="array">Array</option>
-                      </select>
-                      <button
-                        onClick={() => removeField(index, "fields")}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded"
-                      >
-                        <Trash className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                  {(node.data.fields || []).map(
+                    (field: Field, index: number) => (
+                      <div key={index} className="flex items-center">
+                        <input
+                          type="text"
+                          value={field.name}
+                          onBlur={(e) =>
+                            handleArrayChange(
+                              index,
+                              "name",
+                              e.target.value,
+                              "fields"
+                            )
+                          }
+                          className="flex-1 p-2 border rounded text-sm"
+                          placeholder="Field name"
+                        />
+                        <select
+                          value={field.type}
+                          onBlur={(e) =>
+                            handleArrayChange(
+                              index,
+                              "type",
+                              e.target.value,
+                              "fields"
+                            )
+                          }
+                          className="w-24 p-2 border rounded text-sm"
+                        >
+                          <option value="string">String</option>
+                          <option value="number">Number</option>
+                          <option value="boolean">Boolean</option>
+                          <option value="date">Date</option>
+                          <option value="object">Object</option>
+                          <option value="array">Array</option>
+                        </select>
+                        <button
+                          onClick={() => removeField(index, "fields")}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )
+                  )}
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <input
@@ -601,15 +616,8 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                   <button
                     onClick={() => {
                       if (newField.name.trim()) {
-                        const updatedFields = [
-                          ...(node.data.fields || []),
-                          { ...newField },
-                        ];
-                        onUpdateNode(node.id, {
-                          ...node.data,
-                          fields: updatedFields,
-                        });
-                        setNewField({ name: "", type: newField.type }); // Use the selected type here
+                        addField("fields");
+                        setNewField({ name: "", type: newField.type });
                       }
                     }}
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -621,7 +629,9 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
             )}
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Status Code</label>
+              <label className="block text-sm font-medium mb-1">
+                Status Code
+              </label>
               <input
                 type="number"
                 name="statusCode"
