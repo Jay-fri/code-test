@@ -62,10 +62,8 @@ export const SigningField: React.FC<SigningFieldProps> = ({
         );
       case "text":
         return field.value ? (
-          // If text field already has a value, display it
           <div className="w-full h-full p-2 text-gray-800">{field.value}</div>
         ) : (
-          // Otherwise show an input
           <input
             type="text"
             placeholder={`Enter ${field.type}`}
@@ -90,8 +88,8 @@ export const SigningField: React.FC<SigningFieldProps> = ({
     <div
       style={{
         position: "absolute",
-        left: field.position.x,
-        top: field.position.y,
+        left: `${field.position.x}%`, // Use percentage for responsive positioning
+        top: `${field.position.y}%`, // Use percentage for responsive positioning
         width: field.size.width,
         height: field.size.height,
       }}

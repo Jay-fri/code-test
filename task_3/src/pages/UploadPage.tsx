@@ -45,8 +45,6 @@ export const UploadPage: React.FC = () => {
   });
 
   const handleNext = () => {
-    // Pass a flag to indicate we're going to recipients page
-    // This will help us distinguish between normal navigation and "send" action
     navigate("/recipients", { state: { fromUpload: true } });
   };
 

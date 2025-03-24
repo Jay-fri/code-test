@@ -66,7 +66,10 @@ export const SigningPage: React.FC = () => {
               .map((field) => (
                 <SigningField
                   key={field.id}
-                  field={field}
+                  field={{
+                    ...field,
+                    value: fieldValues[field.id] || "", // Ensure the value is set from state
+                  }}
                   onChange={handleFieldChange}
                 />
               ))}
@@ -77,6 +80,7 @@ export const SigningPage: React.FC = () => {
           <button
             onClick={handleComplete}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!allFieldsFilled}
           >
             Complete Signing
           </button>
