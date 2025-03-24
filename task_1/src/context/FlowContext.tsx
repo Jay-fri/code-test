@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Node, Edge } from "reactflow";
 
-// Define interfaces from the original store
 interface Model {
   id: string;
   name: string;
@@ -46,13 +45,12 @@ interface Settings {
   timezone: string;
   dbHost: string;
   dbPort: string;
-  dbUser: string;
+  db: string; // Fixed line
   dbPassword: string;
   dbName: string;
 }
 
-// Define the shape of our context state
-interface FlowContextType {
+interface FlowState {
   nodes: Node[];
   edges: Edge[];
   selectedNode: Node | null;
@@ -61,7 +59,6 @@ interface FlowContextType {
   routes: Route[];
   settings: Settings;
   defaultTablesShown: boolean;
-
   setNodes: (nodes: Node[] | ((prev: Node[]) => Node[])) => void;
   setEdges: (edges: Edge[] | ((prev: Edge[]) => Edge[])) => void;
   setSelectedNode: (node: Node | null) => void;
@@ -79,86 +76,30 @@ interface FlowContextType {
   updateNode: (nodeId: string, newData: any) => void;
 }
 
-// Create default settings
-const defaultSettings: Settings = {
-  globalKey: `key_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-  databaseType: "mysql",
-  authType: "session",
-  timezone: "UTC",
-  dbHost: "localhost",
-  dbPort: "3306",
-  dbUser: "root",
-  dbPassword: "root",
-  dbName: `database_${new Date().toISOString().split("T")[0]}`,
-};
+const FlowContext = createContext<FlowState | undefined>(undefined);
 
-// Create the context with default values
-const FlowContext = createContext<FlowContextType>({
-  nodes: [],
-  edges: [],
-  selectedNode: null,
-  models: [],
-  roles: [],
-  routes: [],
-  settings: defaultSettings,
-  defaultTablesShown: false,
-
-  setNodes: () => {},
-  setEdges: () => {},
-  setSelectedNode: () => {},
-  updateNodeData: () => {},
-  addModel: () => {},
-  updateModel: () => {},
-  addRole: () => {},
-  updateRole: () => {},
-  deleteRole: () => {},
-  addRoute: () => {},
-  updateRoute: () => {},
-  deleteRoute: () => {},
-  updateSettings: () => {},
-  setDefaultTablesShown: () => {},
-  updateNode: () => {},
-});
-
-// Create a provider component
-interface FlowProviderProps {
-  children: ReactNode;
-}
-
-export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
-  const [nodes, setNodesState] = useState<Node[]>([]);
-  const [edges, setEdgesState] = useState<Edge[]>([]);
-  const [selectedNode, setSelectedNodeState] = useState<Node | null>(null);
+export const FlowProvider = ({ children }: { children: ReactNode }) => {
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [defaultTablesShown, setDefaultTablesShownState] =
-    useState<boolean>(false);
-
-  // Implementation of all the functions
-  const setNodes = (nodesOrFn: Node[] | ((prev: Node[]) => Node[])) => {
-    if (typeof nodesOrFn === "function") {
-      setNodesState((prev) => nodesOrFn(prev));
-    } else {
-      setNodesState(nodesOrFn);
-    }
-  };
-
-  const setEdges = (edgesOrFn: Edge[] | ((prev: Edge[]) => Edge[])) => {
-    if (typeof edgesOrFn === "function") {
-      setEdgesState((prev) => edgesOrFn(prev));
-    } else {
-      setEdgesState(edgesOrFn);
-    }
-  };
-
-  const setSelectedNode = (node: Node | null) => {
-    setSelectedNodeState(node);
-  };
+  const [settings, setSettings] = useState<Settings>({
+    globalKey: `key_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    databaseType: "mysql",
+    authType: "session",
+    timezone: "UTC",
+    dbHost: "localhost",
+    dbPort: "3306",
+    db: "root", // Fixed line
+    dbPassword: "root",
+    dbName: `database_${new Date().toISOString().split("T")[0]}`,
+  });
+  const [defaultTablesShown, setDefaultTablesShown] = useState<boolean>(false);
 
   const updateNodeData = (nodeId: string, newData: any) => {
-    setNodesState((prevNodes) =>
+    setNodes((prevNodes) =>
       prevNodes.map((node) =>
         node.id === nodeId
           ? { ...node, data: { ...node.data, ...newData } }
@@ -167,94 +108,60 @@ export const FlowProvider: React.FC<FlowProviderProps> = ({ children }) => {
     );
   };
 
-  const addModel = (model: Model) => {
-    setModels((prevModels) => [...prevModels, model]);
-  };
-
-  const updateModel = (model: Model) => {
-    setModels((prevModels) =>
-      prevModels.map((m) => (m.id === model.id ? model : m))
-    );
-  };
-
-  const addRole = (role: Role) => {
-    setRoles((prevRoles) => [...prevRoles, role]);
-  };
-
-  const updateRole = (role: Role) => {
-    setRoles((prevRoles) =>
-      prevRoles.map((r) => (r.id === role.id ? role : r))
-    );
-  };
-
-  const deleteRole = (roleId: string) => {
-    setRoles((prevRoles) => prevRoles.filter((r) => r.id !== roleId));
-  };
-
-  const addRoute = (route: Route) => {
-    setRoutes((prevRoutes) => [...prevRoutes, route]);
-  };
-
-  const updateRoute = (route: Route) => {
-    setRoutes((prevRoutes) =>
-      prevRoutes.map((r) => (r.id === route.id ? route : r))
-    );
-  };
-
-  const deleteRoute = (routeId: string) => {
-    setRoutes((prevRoutes) => prevRoutes.filter((r) => r.id !== routeId));
-  };
-
-  const updateSettings = (newSettings: Settings) => {
-    setSettings(newSettings);
-  };
-
-  const setDefaultTablesShown = (shown: boolean) => {
-    setDefaultTablesShownState(shown);
-  };
-
+  const addModel = (model: Model) => setModels((prev) => [...prev, model]);
+  const updateModel = (model: Model) =>
+    setModels((prev) => prev.map((m) => (m.id === model.id ? model : m)));
+  const addRole = (role: Role) => setRoles((prev) => [...prev, role]);
+  const updateRole = (role: Role) =>
+    setRoles((prev) => prev.map((r) => (r.id === role.id ? role : r)));
+  const deleteRole = (roleId: string) =>
+    setRoles((prev) => prev.filter((r) => r.id !== roleId));
+  const addRoute = (route: Route) => setRoutes((prev) => [...prev, route]);
+  const updateRoute = (route: Route) =>
+    setRoutes((prev) => prev.map((r) => (r.id === route.id ? route : r)));
+  const deleteRoute = (routeId: string) =>
+    setRoutes((prev) => prev.filter((r) => r.id !== routeId));
   const updateNode = (nodeId: string, newData: any) => {
-    console.log("Updating node in context:", nodeId, newData);
-    setNodesState((prevNodes) =>
-      prevNodes.map((node) =>
-        node.id === nodeId
-          ? { ...node, data: { ...node.data, ...newData } }
-          : node
-      )
-    );
-  };
-
-  // Create the value object with all state and functions
-  const contextValue: FlowContextType = {
-    nodes,
-    edges,
-    selectedNode,
-    models,
-    roles,
-    routes,
-    settings,
-    defaultTablesShown,
-    setNodes,
-    setEdges,
-    setSelectedNode,
-    updateNodeData,
-    addModel,
-    updateModel,
-    addRole,
-    updateRole,
-    deleteRole,
-    addRoute,
-    updateRoute,
-    deleteRoute,
-    updateSettings,
-    setDefaultTablesShown,
-    updateNode,
+    updateNodeData(nodeId, newData);
   };
 
   return (
-    <FlowContext.Provider value={contextValue}>{children}</FlowContext.Provider>
+    <FlowContext.Provider
+      value={{
+        nodes,
+        edges,
+        selectedNode,
+        models,
+        roles,
+        routes,
+        settings,
+        defaultTablesShown,
+        setNodes,
+        setEdges,
+        setSelectedNode,
+        updateNodeData,
+        addModel,
+        updateModel,
+        addRole,
+        updateRole,
+        deleteRole,
+        addRoute,
+        updateRoute,
+        deleteRoute,
+        updateSettings: setSettings,
+        setDefaultTablesShown,
+        updateNode,
+      }}
+    >
+      {children}
+    </FlowContext.Provider>
   );
 };
 
-// Custom hook to use the context
-export const useFlowContext = () => useContext(FlowContext);
+export const useFlowContext = () => {
+  const context = useContext(FlowContext);
+  if (!context) {
+    throw new Error("useFlowContext must be used within a FlowProvider");
+  }
+  return context;
+};

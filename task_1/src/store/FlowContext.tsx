@@ -45,7 +45,7 @@ interface Settings {
   timezone: string;
   dbHost: string;
   dbPort: string;
-  dbUser: string;
+  db: string; // Fixed line
   dbPassword: string;
   dbName: string;
 }
@@ -92,7 +92,7 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
     timezone: "UTC",
     dbHost: "localhost",
     dbPort: "3306",
-    dbUser: "root",
+    db: "root", // Fixed line
     dbPassword: "root",
     dbName: `database_${new Date().toISOString().split("T")[0]}`,
   });
@@ -122,7 +122,6 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
   const deleteRoute = (routeId: string) =>
     setRoutes((prev) => prev.filter((r) => r.id !== routeId));
   const updateNode = (nodeId: string, newData: any) => {
-    console.log("Updating node in store:", nodeId, newData);
     updateNodeData(nodeId, newData);
   };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -8,10 +8,11 @@ import ReactFlow, {
   useReactFlow,
   applyNodeChanges,
   applyEdgeChanges,
-} from 'reactflow';
-import { useFlowStore } from '../store/flowStore';
-import { ConfigPanel } from './ConfigPanel';
-import CustomNode from './CustomNode';
+} from "reactflow";
+import { useFlowContext } from "../context/FlowContext";
+import { ConfigPanel } from "./ConfigPanel";
+import CustomNode from "./CustomNode";
+import { ComponentsPanel } from "./ComponentsPanel";
 
 const nodeTypes = {
   auth: CustomNode,
@@ -19,15 +20,14 @@ const nodeTypes = {
   output: CustomNode,
   logic: CustomNode,
   variable: CustomNode,
-  'db-find': CustomNode,
-  'db-insert': CustomNode,
-  'db-update': CustomNode,
-  'db-delete': CustomNode,
-  'db-query': CustomNode,
+  "db-find": CustomNode,
+  "db-insert": CustomNode,
+  "db-update": CustomNode,
+  "db-delete": CustomNode,
+  "db-query": CustomNode,
 };
 
 export function FlowEditor() {
-  const { project } = useReactFlow();
   const {
     nodes,
     edges,
@@ -36,7 +36,23 @@ export function FlowEditor() {
     selectedNode,
     setSelectedNode,
     updateNodeData,
-  } = useFlowStore();
+  } = useFlowContext();
+  const { project } = useReactFlow();
+
+  useEffect(() => {
+    // Create a default URL node when the editor initializes
+    const defaultNode = {
+      id: `url_node_${Date.now()}`,
+      type: "url",
+      position: { x: 100, y: 100 },
+      data: {
+        label: "URL",
+        path: "/api/resource", // Default path
+        method: "GET", // Default method
+      },
+    };
+    setNodes((nds) => [...nds, defaultNode]);
+  }, [setNodes]);
 
   const onNodesChange = React.useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
