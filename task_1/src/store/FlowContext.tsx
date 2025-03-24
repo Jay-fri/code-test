@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Node, Edge } from 'reactflow';
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { Node, Edge } from "reactflow";
 
 interface Model {
   id: string;
@@ -101,19 +101,26 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
   const updateNodeData = (nodeId: string, newData: any) => {
     setNodes((prevNodes) =>
       prevNodes.map((node) =>
-        node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, ...newData } }
+          : node
       )
     );
   };
 
   const addModel = (model: Model) => setModels((prev) => [...prev, model]);
-  const updateModel = (model: Model) => setModels((prev) => prev.map((m) => (m.id === model.id ? model : m)));
+  const updateModel = (model: Model) =>
+    setModels((prev) => prev.map((m) => (m.id === model.id ? model : m)));
   const addRole = (role: Role) => setRoles((prev) => [...prev, role]);
-  const updateRole = (role: Role) => setRoles((prev) => prev.map((r) => (r.id === role.id ? role : r)));
-  const deleteRole = (roleId: string) => setRoles((prev) => prev.filter((r) => r.id !== roleId));
+  const updateRole = (role: Role) =>
+    setRoles((prev) => prev.map((r) => (r.id === role.id ? role : r)));
+  const deleteRole = (roleId: string) =>
+    setRoles((prev) => prev.filter((r) => r.id !== roleId));
   const addRoute = (route: Route) => setRoutes((prev) => [...prev, route]);
-  const updateRoute = (route: Route) => setRoutes((prev) => prev.map((r) => (r.id === route.id ? route : r)));
-  const deleteRoute = (routeId: string) => setRoutes((prev) => prev.filter((r) => r.id !== routeId));
+  const updateRoute = (route: Route) =>
+    setRoutes((prev) => prev.map((r) => (r.id === route.id ? route : r)));
+  const deleteRoute = (routeId: string) =>
+    setRoutes((prev) => prev.filter((r) => r.id !== routeId));
   const updateNode = (nodeId: string, newData: any) => {
     console.log("Updating node in store:", nodeId, newData);
     updateNodeData(nodeId, newData);
@@ -158,4 +165,4 @@ export const useFlowContext = () => {
     throw new Error("useFlowContext must be used within a FlowProvider");
   }
   return context;
-}; 
+};

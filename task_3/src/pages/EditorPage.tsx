@@ -1,6 +1,6 @@
-import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { Save, GripHorizontal, X, Edit } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Save, GripHorizontal, X, Edit, Send } from "lucide-react";
 import { useDocumentStore } from "../store/documentStore";
 import { ProgressBar } from "../components/ProgressBar";
 import { PDFViewer } from "../components/PDFViewer";
@@ -17,6 +17,7 @@ const FIELD_DEFAULT_SIZES = {
 
 export const EditorPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     currentDocument,
     addField,
@@ -35,10 +36,20 @@ export const EditorPage: React.FC = () => {
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [previewMode, setPreviewMode] = useState(false);
+
+  // Check if we're in preview mode based on location state
+  useEffect(() => {
+    if (location.state?.previewMode) {
+      setPreviewMode(true);
+    } else {
+      setPreviewMode(false);
+    }
+  }, [location.state]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!currentDocument || !pdfContainerRef.current) return;
+    if (!currentDocument || !pdfContainerRef.current || previewMode) return;
 
     const type = e.dataTransfer.getData("fieldType") as DocumentField["type"];
     if (!type) return;
@@ -91,8 +102,21 @@ export const EditorPage: React.FC = () => {
     navigate("/summary");
   };
 
+  const togglePreviewMode = () => {
+    setPreviewMode(!previewMode);
+    // When entering edit mode, clear selections
+    if (previewMode) {
+      setSelectedField(null);
+      setIsEditing(false);
+    }
+  };
+
   const handleFieldClick = (field: DocumentField, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
+
+    // In preview mode, don't allow selection or editing
+    if (previewMode) return;
+
     setSelectedField(field);
 
     if (field.type === "text" && e.detail === 2) {
@@ -104,7 +128,7 @@ export const EditorPage: React.FC = () => {
 
   const handleDeleteField = (fieldId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (currentDocument) {
+    if (currentDocument && !previewMode) {
       removeField(currentDocument.id, fieldId);
       if (selectedField?.id === fieldId) {
         setSelectedField(null);
@@ -114,7 +138,7 @@ export const EditorPage: React.FC = () => {
 
   const handleEditField = (fieldId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (currentDocument) {
+    if (currentDocument && !previewMode) {
       const field = currentDocument.fields.find((f) => f.id === fieldId);
       if (field && field.type === "text") {
         setSelectedField(field);
@@ -138,6 +162,9 @@ export const EditorPage: React.FC = () => {
 
   const handleFieldDragStart = (field: DocumentField, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // Don't allow dragging in preview mode
+    if (previewMode) return;
 
     // Only start dragging if we're clicking on the header bar
     const target = e.target as HTMLElement;
@@ -172,7 +199,8 @@ export const EditorPage: React.FC = () => {
       isDragging &&
       selectedField &&
       currentDocument &&
-      pdfContainerRef.current
+      pdfContainerRef.current &&
+      !previewMode
     ) {
       const rect = pdfContainerRef.current.getBoundingClientRect();
 
@@ -201,8 +229,10 @@ export const EditorPage: React.FC = () => {
   };
 
   const handleBackgroundClick = () => {
-    setSelectedField(null);
-    setIsEditing(false);
+    if (!previewMode) {
+      setSelectedField(null);
+      setIsEditing(false);
+    }
   };
 
   if (!currentDocument) {
@@ -217,23 +247,45 @@ export const EditorPage: React.FC = () => {
       </div>
 
       <div className="flex flex-1">
-        <EditorSidebar />
+        {!previewMode && <EditorSidebar />}
 
-        <div className="flex-1 p-4">
+        <div className={`flex-1 p-4 ${previewMode ? "w-full" : ""}`}>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Document Editor</h2>
-            <button
-              onClick={handleSave}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save
-            </button>
+            <h2 className="text-2xl font-semibold">
+              {previewMode ? "Document Preview" : "Document Editor"}
+            </h2>
+            <div className="flex space-x-3">
+              <button
+                onClick={togglePreviewMode}
+                className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                {previewMode ? (
+                  <>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Preview
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save
+              </button>
+            </div>
           </div>
 
           <div
             ref={containerRef}
-            className="bg-gray-100 rounded-lg p-4 flex justify-center relative overflow-auto min-h-[600px]"
+            className={`bg-gray-100 rounded-lg p-4 flex justify-center relative overflow-auto min-h-[600px] ${
+              previewMode ? "cursor-default" : ""
+            }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={handleBackgroundClick}
@@ -248,7 +300,7 @@ export const EditorPage: React.FC = () => {
                 />
               )}
 
-              {isEditing && selectedField && (
+              {isEditing && selectedField && !previewMode && (
                 <div
                   style={{
                     position: "absolute",
@@ -302,16 +354,18 @@ export const EditorPage: React.FC = () => {
                       height: field.size.height,
                     }}
                     className={`${
-                      selectedField?.id === field.id
-                        ? "border-2 border-blue-500"
+                      previewMode
+                        ? "bg-white/90" // More transparent in preview mode
+                        : selectedField?.id === field.id
+                        ? "border-2 border-blue-500 bg-white/80"
                         : field.type === "text" && !selectedField
-                        ? "border border-gray-200" // Subtle border when not selected for text fields
-                        : "border-2 border-gray-400"
-                    } bg-white/80 rounded-md shadow-sm`}
+                        ? "border border-gray-200 bg-white/80" // Subtle border when not selected for text fields
+                        : "border-2 border-gray-400 bg-white/80"
+                    } rounded-md shadow-sm`}
                     onClick={(e) => handleFieldClick(field, e)}
                   >
-                    {selectedField?.id === field.id ? (
-                      // Show edit controls when selected
+                    {selectedField?.id === field.id && !previewMode ? (
+                      // Show edit controls when selected (not in preview mode)
                       <div className="h-full">
                         <div
                           className="field-header text-xs bg-blue-500 text-white px-2 py-1 flex items-center justify-between rounded-t-sm cursor-move"
@@ -343,15 +397,22 @@ export const EditorPage: React.FC = () => {
                         )}
                       </div>
                     ) : (
-                      // Just show the content when not selected
+                      // Just show the content (also for preview mode)
                       <div className="h-full">
                         {field.type === "text" ? (
                           // For text fields, show the content or placeholder
                           <div className="p-2 text-sm h-full">
                             {field.value || "Enter text here"}
                           </div>
+                        ) : previewMode ? (
+                          // For preview mode, just show minimal UI
+                          <div className="h-full flex items-center justify-center">
+                            <span className="text-xs text-gray-500 italic">
+                              {field.type} field
+                            </span>
+                          </div>
                         ) : (
-                          // For other fields, show a label
+                          // For other fields in edit mode, show a label
                           <div className="h-full">
                             <div className="field-header text-xs bg-gray-400 text-white px-2 py-1 rounded-t-sm">
                               <span className="capitalize">{field.type}</span>
