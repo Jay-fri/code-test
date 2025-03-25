@@ -103,14 +103,12 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
 
   useEffect(() => {
     if (node) {
-      // Initialize node data with defaults if not already set
       const defaultData = getDefaultDataForType(node.type);
       const newData = {
         ...defaultData,
-        ...node.data, // This will override defaults with any existing data
+        ...node.data,
       };
 
-      // Only update if the data is different
       if (JSON.stringify(newData) !== JSON.stringify(node.data)) {
         onUpdateNode(node.id, newData);
         updateNode(node.id, newData);
@@ -131,19 +129,10 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
   ) => {
     if (!node) return;
 
-    console.log(
-      "Handling change for:",
-      e.target.name,
-      "with value:",
-      e.target.value
-    );
-
     const newData = {
       ...node.data,
       [e.target.name]: e.target.value,
     };
-
-    console.log("New data to update:", newData);
 
     onUpdateNode(node.id, newData);
     updateNode(node.id, newData);
@@ -202,15 +191,6 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
   const copyQueryFields = () => {
     const currentFields = node.data.fields || [];
     navigator.clipboard.writeText(JSON.stringify(currentFields, null, 2));
-  };
-
-  const extractQueryParams = (path: string) => {
-    const params = path.match(/:[a-zA-Z]+/g) || [];
-    return params.map((param) => ({
-      name: param.substring(1),
-      type: "string",
-      validation: "",
-    }));
   };
 
   const renderDatabaseFields = () => (
@@ -387,6 +367,11 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                   onChange={(e) =>
                     setNewField({ ...newField, name: e.target.value })
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newField.name.trim()) {
+                      addField("fields");
+                    }
+                  }}
                   className="flex-1 p-2 border rounded text-sm"
                   placeholder="New field name"
                 />
@@ -478,6 +463,11 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                   onChange={(e) =>
                     setNewQueryField({ ...newQueryField, name: e.target.value })
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newQueryField.name.trim()) {
+                      addField("queryFields");
+                    }
+                  }}
                   className="flex-1 p-2 border rounded text-sm"
                   placeholder="New query param"
                 />
@@ -675,6 +665,7 @@ export function ConfigPanel({ node, onClose, onUpdateNode }: ConfigPanelProps) {
                 <option value="array">Array</option>
               </select>
             </div>
+
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
                 Default Value

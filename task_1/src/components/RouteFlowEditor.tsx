@@ -47,6 +47,22 @@ function FlowEditorContent({ route, onClose }: FlowEditorContentProps) {
     updateNodeData,
   } = useFlowContext();
 
+  useEffect(() => {
+    if (route && !nodes.some((node) => node.type === "url")) {
+      const defaultNode = {
+        id: `url_node_${Date.now()}`,
+        type: "url",
+        position: { x: 100, y: 100 },
+        data: {
+          label: "URL",
+          path: route.url,
+          method: route.method,
+        },
+      };
+      setNodes((prevNodes) => [...prevNodes, defaultNode]);
+    }
+  }, [route]);
+
   const onNodesChange = useCallback(
     (changes) => {
       setNodes((nds) => applyNodeChanges(changes, nds));
