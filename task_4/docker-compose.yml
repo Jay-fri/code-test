@@ -19,12 +19,12 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ./
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
-      - ./backend:/app
+      - ./:/app
       - /app/node_modules
     environment:
       - DB_HOST=mysql
