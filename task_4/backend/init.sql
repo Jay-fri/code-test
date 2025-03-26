@@ -1,11 +1,16 @@
-CREATE TABLE users (
+-- Ensure we're using the correct database
+USE videodb;
+
+-- Create users table
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE videos (
+-- Create videos table
+CREATE TABLE IF NOT EXISTS videos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     photo VARCHAR(255),
@@ -16,10 +21,11 @@ CREATE TABLE videos (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Insert some sample data
-INSERT INTO users (username) VALUES ('boss');
+-- Insert default user if not exists
+INSERT IGNORE INTO users (username) VALUES ('boss');
 
-INSERT INTO videos (title, photo, user_id, likes) VALUES 
+-- Insert sample videos, using INSERT IGNORE to prevent duplicate entries
+INSERT IGNORE INTO videos (title, photo, user_id, likes) VALUES 
 ('Rune raises $100,000 for marketing through NFT butterflies sale', 'https://picsum.photos/200/200', 1, 10),
 ('Exploring the future of NFTs in gaming', 'https://picsum.photos/200/201', 1, 15),
 ('How to create a successful YouTube channel', 'https://picsum.photos/200/202', 1, 20),
